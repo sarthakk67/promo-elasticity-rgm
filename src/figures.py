@@ -84,31 +84,57 @@ def fig1_ladder():
 
 
 def fig2_cannibalisation():
-    own, own_se = -0.644, 0.106
-    cross, cross_se = 0.031, 0.063
-    fig, ax = plt.subplots(figsize=(9, 3.0))
-    rows = [("cross-price elasticity\n(vs rival brands)", cross, cross_se, BLUE),
-            ("own-price elasticity", own, own_se, MUTED)]
-    for i, (lab, v, se, c) in enumerate(rows):
-        ax.errorbar(v, i, xerr=1.96 * se, fmt="o", ms=9, color=c,
-                    ecolor=c, elinewidth=2.5, capsize=0, zorder=3,
-                    markeredgecolor=SURFACE, markeredgewidth=2)
-    ax.axvline(0, color=INK_2, lw=1.2, zorder=1)
-    ax.set_yticks(range(len(rows)), [r[0] for r in rows], fontsize=9)
-    ax.set_ylim(-0.6, 1.6)
-    ax.set_xlabel("elasticity")
-    ax.text(cross + 1.96 * cross_se + 0.03, 0,
-            "95% CI [−0.09, +0.15] — spans zero.\nRules out substitution above 0.15.",
-            va="center", fontsize=9, color=INK_2)
-    ax.set_title("No detectable cannibalisation between competing soft-drink brands",
-                 loc="left", fontsize=12, weight="bold", color=INK, pad=12)
-    ax.set_xlim(-0.90, 0.62)
-    style(ax)
-    fig.text(0.008, 0.02, "75 brand-pack clusters · 5,461 brand-pack × week cells · "
-                          "brand-pack and week fixed effects", fontsize=8, color=INK_2)
-    fig.tight_layout(rect=[0, 0.07, 1, 1])
-    fig.savefig(FIG / "02_cannibalisation_null.png", dpi=200)
-    print("  02_cannibalisation_null.png")
+    """Same question, two grains, opposite answers. Separate panels because the
+    units differ (elasticity vs percentage points) -- never a shared axis."""
+    xel = pd.read_csv(TAB / "cross_elasticity.csv").iloc[0]
+    sw = pd.read_csv(TAB / "brand_switching.csv")
+    sw4 = sw[sw.spec == "4. + week FE"].iloc[0]
+
+    fig, (a1, a2) = plt.subplots(1, 2, figsize=(11.5, 3.4))
+
+    # aggregate: the null
+    a1.errorbar(xel.cross_elasticity, 0, xerr=1.96 * xel.cross_se, fmt="o", ms=10,
+                color=MUTED, ecolor=MUTED, elinewidth=3, capsize=0,
+                markeredgecolor=SURFACE, markeredgewidth=2, zorder=3)
+    a1.axvline(0, color=INK_2, lw=1.2)
+    a1.set_yticks([0], ["cross-price\nelasticity"], fontsize=9)
+    a1.set_ylim(-0.9, 0.9)
+    a1.set_xlabel("elasticity")
+    a1.set_xlim(-0.30, 0.30)
+    a1.set_title("Brand-pack × week: nothing", loc="left", fontsize=11, color=INK, pad=10)
+    a1.text(0, -0.62, f"{xel.cross_elasticity:+.3f}   CI [{xel.cross_ci_lo:+.2f}, "
+            f"{xel.cross_ci_hi:+.2f}] spans zero",
+            ha="center", fontsize=9, color=INK_2,
+            bbox=dict(facecolor=SURFACE, edgecolor="none", pad=2))
+    style(a1)
+
+    # household: the finding
+    a2.errorbar(sw4.rival_promoted * 100, 0, xerr=1.96 * sw4.se * 100, fmt="o", ms=10,
+                color=BLUE, ecolor=BLUE, elinewidth=3, capsize=0,
+                markeredgecolor=SURFACE, markeredgewidth=2, zorder=3)
+    a2.axvline(0, color=INK_2, lw=1.2)
+    a2.set_yticks([0], ["switch away from\nincumbent brand"], fontsize=9)
+    a2.set_ylim(-0.9, 0.9)
+    a2.set_xlabel("change in switch probability, percentage points")
+    a2.set_xlim(-2, 10)
+    a2.set_title("Household trip: +7.3pp", loc="left", fontsize=11, color=INK, pad=10)
+    a2.text(sw4.rival_promoted * 100, -0.62,
+            f"+{sw4.rival_promoted*100:.1f}pp   CI [+{sw4.ci_lo*100:.1f}, "
+            f"+{sw4.ci_hi*100:.1f}]   p < 0.001",
+            ha="center", fontsize=9, color=INK_2,
+            bbox=dict(facecolor=SURFACE, edgecolor="none", pad=2))
+    style(a2)
+
+    fig.suptitle("The same question at two grains gives opposite answers",
+                 x=0.008, ha="left", fontsize=13, weight="bold", color=INK)
+    fig.text(0.008, 0.005,
+             "Aggregating to brand-pack × week cancels households switching in opposite "
+             "directions · 57,152 trips, 1,644 households · household and week FE · "
+             "placebo (next week's rival promo) is null at p = 0.25",
+             fontsize=8, color=INK_2)
+    fig.tight_layout(rect=[0, 0.06, 1, 0.90])
+    fig.savefig(FIG / "02_cannibalisation_two_grains.png", dpi=200)
+    print("  02_cannibalisation_two_grains.png")
 
 
 def fig3_mechanics():
