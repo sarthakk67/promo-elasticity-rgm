@@ -1,0 +1,2 @@
+design,clusters,n_cells,own_elasticity,cross_elasticity,cross_se,cross_p,cross_ci_lo,cross_ci_hi
+pooled (rival = rest of sub-commodity),75,5461,-0.6438151461451668,0.030611651685329606,0.0630038690794526,0.628495395926528,-0.0928759317103975,0.15409923508105672

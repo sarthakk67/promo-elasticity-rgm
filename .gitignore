@@ -1,0 +1,7 @@
+.venv/
+data/raw/*
+data/processed/*
+!data/**/.gitkeep
+__pycache__/
+*.duckdb
+.DS_Store
