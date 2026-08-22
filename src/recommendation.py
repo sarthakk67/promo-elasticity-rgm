@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 TAB = ROOT / "outputs" / "tables"
 MARGINS = [0.20, 0.25, 0.30, 0.35]
 PANTRY_HAIRCUT = 0.14      # share of promo volume given back as a longer repurchase gap
+ELASTICITIES = [-0.571, -1.0]   # measured lower bound, and a plausible truer value
 
 
 def main():
@@ -53,6 +54,17 @@ def main():
                # promo gross profit clears baseline when depth <= margin x incremental share
                "breakeven_depth_at_25pct": 0.25 * (net_incr / r.promoted_units)
                                            if r.promoted_units else float("nan")}
+        # Volume cost of the recommendation ACTUALLY made -- cutting depth, not stopping.
+        # Shallower discount = higher paid price = less volume, via own-price elasticity.
+        d0 = row["current_depth"]
+        d1 = row["breakeven_depth_at_25pct"]
+        if d0 == d0 and d1 == d1 and d0 > d1:
+            dlnp = np.log((1 - d1) / (1 - d0))
+            for e in ELASTICITIES:
+                lost = r.promoted_units * (1 - np.exp(e * dlnp))
+                tag = f"{abs(e):.3f}".replace(".", "")
+                row[f"depthcut_units_lost_e{tag}"] = lost
+                row[f"depthcut_giveup_pct_of_category_e{tag}"] = lost / cat_units
         for m in MARGINS:
             row[f"net_gain_at_{int(m*100)}pct"] = spend - net_incr * avg_price * m
         rows.append(row)
@@ -63,6 +75,16 @@ def main():
     show = ["mechanic", "counterfactual", "discount_spend", "net_incremental",
             "volume_giveup_pct_of_category", "breakeven_gross_margin",
             "net_gain_at_25pct"]
+    combo_g = res[(res.mechanic == "display + mailer") & (res.counterfactual == "GBM")].iloc[0]
+    print(f"\n=== cost of the recommendation actually made (cut depth, keep mechanic) ===")
+    print(f"  depth {combo_g.current_depth:.1%} -> {combo_g.breakeven_depth_at_25pct:.1%}")
+    for e in ELASTICITIES:
+        tag = f"{abs(e):.3f}".replace(".", "")
+        print(f"    at elasticity {e:+.3f}: lose {combo_g[f'depthcut_units_lost_e{tag}']:,.0f} units "
+              f"({combo_g[f'depthcut_giveup_pct_of_category_e{tag}']:.1%} of category)")
+    print(f"  for comparison, STOPPING the mechanic costs "
+          f"{combo_g.net_incremental:,.0f} units "
+          f"({combo_g.volume_giveup_pct_of_category:.1%} of category)")
     d = res[show].copy()
     d.discount_spend = d.discount_spend.map("${:,.0f}".format)
     d.net_incremental = d.net_incremental.map("{:,.0f}".format)

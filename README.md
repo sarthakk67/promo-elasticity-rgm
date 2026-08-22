@@ -97,8 +97,10 @@ promotion does not move share.
 
 | Rival brand promoted in that store-week *(57,152 trips, 1,644 households)* | |
 |---|---|
+| *(base rate is switching when no rival is promoted, 35.6%; the unconditional rate across all trips is 41.8%)* | |
+|---|---|
 | Switch away from incumbent brand | **+7.3pp** (CI +6.2, +8.4; p < 0.001) |
-| …off a base switch rate of | 41.8% — a **17% relative increase** |
+| …off a base switch rate of | 35.6% — a **20% relative increase** |
 | Incumbent brand promoted instead | **−11.6pp** — own promotion defends the base |
 
 Survives household FE, week FE and store FE.
@@ -229,12 +231,13 @@ and the depth is a dial.
 | | |
 |---|---|
 | Discount absorbed | **$73,110** — 87% of all promo spend |
-| Volume given up | **34,057 units** — 21% of category volume |
+| Volume given up *(cutting depth to 16.3%)* | **9,172 units — 5.7% of category** at the measured elasticity; 14,985 (9.3%) if the true elasticity is −1.0 |
+| *(for comparison, stopping the mechanic outright)* | *34,057 units — 21.1% of category* |
 | Current depth | **40.4% off shelf** ($3.47 → $2.07, $1.40/unit) |
 | Incremental share of promoted volume | **76%** |
 | Break-even gross margin *at current depth* | **105%** *(125% under the FE counterfactual)* |
-| **Break-even depth at a 25% gross margin** | **≈ 19%** |
-| Same, after the pantry-loading haircut | **≈ 16%** |
+| **Break-even depth at a 25% gross margin** | **16.3%** *(19% before the pantry haircut)* |
+| **Run at** | **2.5× break-even depth** |
 
 **Why break-even margin above 100% is the argument.** At current depth the mechanic
 spends $73,110 of discount to generate roughly $69,000 of incremental *revenue*. It
@@ -251,9 +254,9 @@ baseline when
 depth ≤ m × s
 ```
 
-which at m = 25% and s = 76% puts break-even at **19% off**, and at **16%** once the
-14% pantry giveback is netted out of `s`. The mechanic is run at more than twice its
-break-even depth.
+which at m = 25% and s = 76% puts break-even at 19% off, and at **16.3%** once the 14%
+pantry giveback is netted out of `s`. The haircut-adjusted figure is the one quoted
+throughout: 40.4% ÷ 16.3% = **2.5× break-even depth**.
 
 *And `s` here is too generous.* Incremental share is measured at **brand** level, so a
 unit taken from a rival on the same shelf counts as incremental. For the retailer it is
