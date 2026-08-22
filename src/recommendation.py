@@ -22,6 +22,16 @@ def main():
     con = duckdb.connect(str(ROOT / "data/processed/journey.duckdb"), read_only=True)
     avg_price, cat_units = con.execute(
         "SELECT SUM(sales_value)/SUM(units), SUM(units) FROM brandpack").fetchone()
+    # current depth per mechanic -- the lever the recommendation actually pulls
+    depths = con.execute("""
+        SELECT CASE WHEN display_share > 0.20 AND mailer_share > 0.20 THEN 'display + mailer'
+                    WHEN display_share > 0.20 THEN 'display only'
+                    WHEN mailer_share  > 0.20 THEN 'mailer only' END AS mechanic,
+               1 - SUM(sales_value) / SUM(sales_value + retail_disc) AS current_depth
+        FROM brandpack
+        WHERE display_share > 0.20 OR mailer_share > 0.20
+        GROUP BY 1
+    """).df().set_index("mechanic").current_depth
     con.close()
     print(f"category: SOFT DRINKS | {cat_units:,.0f} units | avg price ${avg_price:.2f}")
     print(f"pantry-loading haircut applied to incremental volume: {PANTRY_HAIRCUT:.0%}\n")
@@ -38,7 +48,11 @@ def main():
                "discount_spend": spend, "gross_incremental": gross_incr,
                "net_incremental": net_incr,
                "volume_giveup_pct_of_category": net_incr / cat_units,
-               "breakeven_gross_margin": breakeven}
+               "breakeven_gross_margin": breakeven,
+               "current_depth": float(depths.get(mech, float("nan"))),
+               # promo gross profit clears baseline when depth <= margin x incremental share
+               "breakeven_depth_at_25pct": 0.25 * (net_incr / r.promoted_units)
+                                           if r.promoted_units else float("nan")}
         for m in MARGINS:
             row[f"net_gain_at_{int(m*100)}pct"] = spend - net_incr * avg_price * m
         rows.append(row)
@@ -59,8 +73,13 @@ def main():
 
     combo = res[(res.mechanic == "display + mailer") & (res.counterfactual == "GBM")].iloc[0]
     print(f"\n--- the call ---")
-    print(f"  STOP 'display + mailer'. It absorbs ${combo.discount_spend:,.0f} of discount, "
-          f"{combo.discount_spend/res[res.counterfactual=='GBM'].discount_spend.sum():.0%} of all promo spend.")
+    print(f"  CUT THE DEPTH on 'display + mailer'. It absorbs ${combo.discount_spend:,.0f} "
+          f"of discount, "
+          f"{combo.discount_spend/res[res.counterfactual=='GBM'].discount_spend.sum():.0%} "
+          f"of all promo spend -- too much to switch off in a quarter, but depth is a dial.")
+    print(f"  Run at {combo.current_depth:.1%} off shelf against a break-even depth of "
+          f"{combo.breakeven_depth_at_25pct:.1%} at a 25% margin "
+          f"({combo.current_depth/combo.breakeven_depth_at_25pct:.1f}x).")
     print(f"  You give up {combo.net_incremental:,.0f} incremental units "
           f"({combo.volume_giveup_pct_of_category:.1%} of category volume).")
     print(f"  It only pays for itself above a {combo.breakeven_gross_margin:.0%} gross margin.")

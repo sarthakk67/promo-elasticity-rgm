@@ -379,9 +379,29 @@ Building that test caught a real bug: the original tolerance was a flat ±0.051,
 nothing against 73,110 and everything against 0.571 — it passed the exact drift it
 existed to catch.
 
-*Status: the generator requires `ANTHROPIC_API_KEY` and has not yet been run against the
-live API, so no sample output is committed. The validator above runs and passes without
-one.*
+**What running it actually caught** — three rounds, three different failures, none of
+them fabrication:
+
+1. **An inverted recommendation.** The first brief read "reallocate budget to combo
+   offers" — the opposite of the finding. The model saw "87% of spend" and read scale as
+   endorsement. Cause: the conclusions lived only in my head, not in `FACTS`.
+2. **A mis-keyed citation.** It wrote "at a 25% gross margin" and filed it under
+   `net_gain_at_25pct_margin_usd`, whose value is 55,740 — because `25` appears in the
+   key's *name*. The validator rejected it. Cause: the margin assumption existed only
+   inside a key name, which is unciteable.
+3. **A correct figure attached to the wrong action.** "Cutting depth yields $55,740" —
+   that number is the gain from stopping the mechanic entirely. Cause: an ambiguous fact
+   name that named no action.
+
+Every failure traced to something missing or ambiguous in the inputs, and each fix was a
+change to `FACTS` rather than to the prompt. Only the second was catchable by the
+validator; the other two needed a human read, which is the honest limit of this design —
+it verifies arithmetic, not argument.
+
+*The provider is incidental.* The request block is ~20 lines against Gemini
+(`GEMINI_API_KEY`, free tier); the facts extraction, schema, reconciliation and prose
+sweep are provider-agnostic and were unchanged by the swap from Anthropic. That
+separation is the point — the guardrail is the asset, not the API call.
 
 ---
 

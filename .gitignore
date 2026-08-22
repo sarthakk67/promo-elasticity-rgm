@@ -5,3 +5,9 @@ data/processed/*
 __pycache__/
 *.duckdb
 .DS_Store
+
+# secrets -- never commit
+.env
+.envrc
+*.key
+*.pem
